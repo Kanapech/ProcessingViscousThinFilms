@@ -1,0 +1,12 @@
+#version 300 es
+precision highp float;
+uniform sampler2D u;
+uniform float threshold;
+in vec2 p;
+out vec4 fragColor;
+
+void main()
+{
+    fragColor = texture(u, p);
+    fragColor.rgb /= threshold;
+}
