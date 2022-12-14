@@ -46,5 +46,4 @@ void main()
         up = 0.;
     }
     fragColor = vec4(up, up, up, 1);
-    //fragColor = vec4(1.f, 0.f, 0.f, 1.f);
 }

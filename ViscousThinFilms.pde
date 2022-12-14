@@ -57,7 +57,7 @@ float G = -9.81;
 float diffusion = 2;
 int mobility = 0;
 
-int iterations = 1;
+int iterations = 3;
 boolean dynamicTimeStep = false;
 float estimatedFrameTime = 0.02;
 float[] logTimeStep = {-5, -1};
@@ -67,6 +67,17 @@ boolean periodic = false;
 public void setup() {
   size(800, 800, P2D);
   mode = "gradient";
+  
+  back = new Background("brick", "bricks.diffuse.jpg", "bricks.bump.jpg", 2); //Chargement du fond
+  fluid = new Fluid("wine", 1.33, color(.4, 0., .05), 0., 1., 5);
+  simRes = 512;
+  simWidth = simRes;
+  simHeight = simRes * (height/width);
+  
+  u0 = loadImage("emptiest.png");
+  viridis = loadImage("viridis.png");
+  empty = loadImage("empty.png"); //Image en cas de composante diffuse ou bump nulle
+
 
   //Differents programmes
   thinFilms = createGraphics(width, height, P2D);
@@ -81,25 +92,15 @@ public void setup() {
   caustics = createGraphics(width, height, P2D);
   black = createGraphics(width, height, P2D);
 
-  u0 = loadImage("emptiest.png");
-  viridis = loadImage("viridis.png");
-  empty = loadImage("empty.png"); //Image en cas de composante diffuse ou bump nulle
-
-  work1 = createImage(simWidth, simHeight, ARGB);
-  work2 = createImage(simWidth, simHeight, ARGB);
-  fluidTex = createImage(simWidth, simHeight, ARGB);
-  caustics1 = createImage(width, height, ARGB);
-  caustics2 = createImage(width, height, ARGB);
-  caustics3 = createImage(width, height, ARGB);
-  caustics4 = createImage(width, height, ARGB);
-  normals = createImage(width, height, ARGB);
-  normalsWork = createImage(width, height, ARGB);
-
-  back = new Background("brick", "bricks.diffuse.jpg", "bricks.bump.jpg", 2); //Chargement du fond
-  fluid = new Fluid("wine", 1.33, color(.4, 0., .05), 0., 1., 5);
-  simRes = 512;
-  simWidth = simRes;
-  simHeight = simRes * (height/width);
+  work1 = createImage(simWidth, simHeight, RGB);
+  work2 = createImage(simWidth, simHeight, RGB);
+  fluidTex = createImage(simWidth, simHeight, RGB);
+  caustics1 = createImage(width, height, RGB);
+  caustics2 = createImage(width, height, RGB);
+  caustics3 = createImage(width, height, RGB);
+  caustics4 = createImage(width, height, RGB);
+  normals = createImage(width, height, RGB);
+  normalsWork = createImage(width, height, RGB);
 
   //Chargement des différents shaders
   quadThin = loadShader("shaders/thin_films.frag", "shaders/quad.vert");
@@ -148,15 +149,14 @@ public void draw() {
   //background(0);
 
   if (frameCount == 1) {
-    currentProgram = pass;
+    currentProgram = pass; //<>//
     quadPass.set("u", u0);
     drawQuad(currentProgram);
-    work1 = currentProgram.get();
-    save("test.png");
+    work1 = copy();
+    work1.save("work1.png");
   }
 
   currentProgram = thinFilms;
-  quadThin.set("u", u0);
   quadThin.set("u_flip", false);
   quadThin.set("bump", back.bump != null ? back.bump : empty);
   quadThin.set("angle", angle);
@@ -176,69 +176,82 @@ public void draw() {
     quadThin.set("parity", 0);
     quadThin.set("u", work1);
     drawQuad(currentProgram);
-    work2 = currentProgram.get();
+    work2 = copy();
     save(i+"thin.png");
 
     quadThin.set("parity", 1);
     quadThin.set("u", work2);
     drawQuad(currentProgram);
-    work1 = currentProgram.get();
+    work1 = copy();
 
     quadThin.set("parity", 2);
     quadThin.set("u", work1);
     drawQuad(currentProgram);
-    work2 = currentProgram.get();
+    work2 = copy();
 
     quadThin.set("parity", 3);
     quadThin.set("u", work2);
     drawQuad(currentProgram);
-    work1 = currentProgram.get();
+    work1 = copy();
 
     quadThin.set("Dij", 0, 1);
     quadThin.set("parity", 0);
     quadThin.set("u", work1);
     drawQuad(currentProgram);
-    work2 = currentProgram.get();
+    work2 = copy();
 
 
     quadThin.set("parity", 1);
     quadThin.set("u", work2);
     drawQuad(currentProgram);
-    work1 = currentProgram.get();
+    work1 = copy();
 
     quadThin.set("parity", 2);
     quadThin.set("u", work1);
     drawQuad(currentProgram);
-    work2 = currentProgram.get();
+    work2 = copy();
 
     quadThin.set("parity", 3);
     quadThin.set("u", work2);
     drawQuad(currentProgram);
-    work1 = currentProgram.get();
+    work1 = copy();
   }
 
   if (mousePressed) {
+    println("test");
+    currentProgram = spray;
+    quadSpray.set("v_click", (float) mouseX, (float) mouseY);
+    quadSpray.set("radius", 2.);
+    quadSpray.set("heightToWidthRatio", height/ (float) width);
+    quadSpray.set("u", work1);
+    drawQuad(currentProgram);
+    work2 = copy();
+    
+    currentProgram = pass;
+    quadPass.set("u", work2);
+    drawQuad(currentProgram);
+    work1 = copy();
   }
 
   currentProgram = pass;
   quadPass.set("u", work1);
   drawQuad(currentProgram);
-  fluidTex = currentProgram.get();
+  fluidTex = copy();
 
   currentProgram = blur;
   quadBlur.set("dir", 0., 1.);
   quadBlur.set("u", fluidTex);
   drawQuad(currentProgram);
-  work2 = currentProgram.get();
+  work2 = copy();
   quadBlur.set("dir", 1., 0.);
   quadBlur.set("u", work2);
   drawQuad(currentProgram);
-  fluidTex = currentProgram.get();
+  fluidTex = copy();
 
   currentProgram = normal;
   quadNormal.set("u", fluidTex);
   drawQuad(currentProgram);
-  normals = currentProgram.get();
+  normals = copy();
 
   switch(mode) {
   case "gradient":
@@ -262,7 +275,8 @@ public void draw() {
   
   int endTime = millis();
   estimatedFrameTime = (endTime-startTime) / 1000.;
-  println(estimatedFrameTime);
+  //println(estimatedFrameTime);
+  noLoop();
 }
 
 void drawQuad(PGraphics pg) {
