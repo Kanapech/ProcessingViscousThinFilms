@@ -47,8 +47,8 @@ String mode; //Mode d'affichage
 boolean dewetMode; //Appliquer du liquide/faire des trous
 float s = 1;
 
-int w = 256;
-int h = 256;
+int w = 512;
+int h = 512;
 int simRes = 256;
 int simWidth;
 int simHeight;
@@ -112,6 +112,12 @@ void setup() {
   caustics4 = createImage(simWidth, simHeight, RGB);
   normals = createImage(simWidth, simHeight, RGB);
   normalsWork = createImage(simWidth, simHeight, RGB);
+  
+  work1.loadPixels();
+  work2.loadPixels();
+  fluidTex.loadPixels();
+  normals.loadPixels();
+  canvas.loadPixels();
 
   //Chargement des différents shaders
   quadThin = loadShader("shaders/thin_films.frag", "shaders/quad.vert");
@@ -132,31 +138,19 @@ void setup() {
       add(quadSpray);
     }
   };
-
-  //On lie chaque shader à son programme
-  thinFilms.shader(quadThin);
-  normal.shader(quadNormal);
-  blur.shader(quadBlur);
-  pass.shader(quadPass);
-  heightMap.shader(quadHeight);
-  gradient.shader(quadGradient);
-  spray.shader(quadSpray);
-  dewet.shader(quadDewet);
-  refract.shader(quadRefract);
-  caustics.shader(quadCaustics);
-  black.shader(quadBlack);
 }
 
 
 void draw() {
-  clear();
+  background(0);
   if (frameCount == 1) {
     currentProgram = pass;
+    
     quadPass.set("u", u0);
     quadPass.set("u_flip", false);
-    drawQuad(currentProgram);
-    work1 = get();
-    work1.resize(width, height);
+    drawQuad(currentProgram, quadPass);
+    arrayCopy(currentProgram.pixels, work1.pixels);
+    work1.updatePixels();
     //work1.save("work1.png");
   }
 
@@ -179,54 +173,54 @@ void draw() {
     quadThin.set("Dij", 1, 0);
     quadThin.set("parity", 0);
     quadThin.set("u", work1);
-    drawQuad(currentProgram);
-    work2 = get();
-    work2.resize(width, height);
+    drawQuad(currentProgram, quadThin);
+    arrayCopy(currentProgram.pixels, work2.pixels);
+    work2.updatePixels();
 
     quadThin.set("parity", 1);
     quadThin.set("u", work2);
-    drawQuad(currentProgram);
-    work1 = get();
-    work1.resize(width, height);
+    drawQuad(currentProgram, quadThin);
+    arrayCopy(currentProgram.pixels, work1.pixels);
+    work1.updatePixels();
 
     quadThin.set("parity", 2);
     quadThin.set("u", work1);
-    drawQuad(currentProgram);
-    work2 = get();
-    work2.resize(width, height);
+    drawQuad(currentProgram, quadThin);
+    arrayCopy(currentProgram.pixels, work2.pixels);
+    work2.updatePixels();
 
     quadThin.set("parity", 3);
     quadThin.set("u", work2);
-    drawQuad(currentProgram);
-    work1 = get();
-    work1.resize(width, height);
+    drawQuad(currentProgram, quadThin);
+    arrayCopy(currentProgram.pixels, work1.pixels);
+    work1.updatePixels();
 
     quadThin.set("Dij", 0, 1);
     quadThin.set("parity", 0);
     quadThin.set("u", work1);
-    drawQuad(currentProgram);
-    work2 = get();
-    work2.resize(width, height);
+    drawQuad(currentProgram, quadThin);
+    arrayCopy(currentProgram.pixels, work2.pixels);
+    work2.updatePixels();
 
     quadThin.set("parity", 1);
     quadThin.set("u", work2);
-    drawQuad(currentProgram);
-    work1 = get();
-    work1.resize(width, height);
+    drawQuad(currentProgram, quadThin);
+    arrayCopy(currentProgram.pixels, work1.pixels);
+    work1.updatePixels();
 
     quadThin.set("parity", 2);
     quadThin.set("u", work1);
-    drawQuad(currentProgram);
-    work2 = get();
-    work2.resize(width, height);
+    drawQuad(currentProgram, quadThin);
+    arrayCopy(currentProgram.pixels, work2.pixels);
+    work2.updatePixels();
 
     quadThin.set("parity", 3);
     quadThin.set("u", work2);
-    drawQuad(currentProgram);
-    work1 = get();
-    work1.resize(width, height);
+    drawQuad(currentProgram, quadThin);
+    arrayCopy(currentProgram.pixels, work1.pixels);
+    work1.updatePixels();
   }
-  println(frameRate);
+  
   if (mousePressed) {
     //println("test");
     currentProgram = dewetMode ? dewet : spray;
@@ -236,40 +230,41 @@ void draw() {
       s.set("heightToWidthRatio", height/ (float) width);
       s.set("u", work1);
     }
-    drawQuad(currentProgram);
-    work2 = get();
-    work2.resize(width, height);
+    drawQuad(currentProgram, dewetMode ? quadDewet : quadSpray);
+    arrayCopy(currentProgram.pixels, work2.pixels);
+    work2.updatePixels();
 
     currentProgram = pass;
     quadPass.set("u", work2);
-    drawQuad(currentProgram);
-    work1 = get();
-    work1.resize(width, height);
+    drawQuad(currentProgram, quadPass);
+    arrayCopy(currentProgram.pixels, work1.pixels);
+    work1.updatePixels();
   }
 
   currentProgram = pass;
   quadPass.set("u", work1);
-  drawQuad(currentProgram);
-  fluidTex = get();
-  fluidTex.resize(width, height);
+  drawQuad(currentProgram, quadPass);
+  arrayCopy(currentProgram.pixels, fluidTex.pixels);
+  fluidTex.updatePixels();
 
   currentProgram = blur;
   quadBlur.set("dir", 0., 1.);
   quadBlur.set("u", fluidTex);
-  drawQuad(currentProgram);
-  work2 = get();
-  work2.resize(width, height);
+  drawQuad(currentProgram, quadBlur);
+  arrayCopy(currentProgram.pixels, work2.pixels);
+  work2.updatePixels();
   quadBlur.set("dir", 1., 0.);
   quadBlur.set("u", work2);
-  drawQuad(currentProgram);
-  fluidTex = get();
-  fluidTex.resize(width, height);
+  drawQuad(currentProgram, quadBlur);
+  arrayCopy(currentProgram.pixels, fluidTex.pixels);
+  fluidTex.updatePixels();
 
   currentProgram = normal;
   quadNormal.set("u", fluidTex);
-  drawQuad(currentProgram);
-  normals = get();
-
+  drawQuad(currentProgram, quadNormal);
+  arrayCopy(currentProgram.pixels, normals.pixels);
+  normals.updatePixels();
+  
   switch(mode) {
   case "refraction":
     currentProgram = refract;
@@ -283,56 +278,69 @@ void draw() {
     quadRefract.set("caustics3", caustics3);
     quadRefract.set("caustics4", caustics4);
     quadRefract.set("groundTexture", back.diffuse);
-    drawQuad(currentProgram);
+    drawQuad(currentProgram, quadRefract);
+    arrayCopy(currentProgram.pixels, canvas.pixels);
+    canvas.updatePixels();
     break;
   case "gradient":
     currentProgram = gradient;
     quadGradient.set("gradient", viridis);
     quadGradient.set("u", fluidTex);
     //quadGradient.set("u_flip", true);
-    drawQuad(currentProgram);
+    drawQuad(currentProgram, quadGradient);
+    arrayCopy(currentProgram.pixels, canvas.pixels);
+    canvas.updatePixels();
+    //canvas.save("canvas.png");
     break;
   case "normal":
     currentProgram = normal;
     quadNormal.set("u", normals);
     //quadNormal.set("u_flip", true);
-    drawQuad(currentProgram);
+    drawQuad(currentProgram, quadNormal);
+    arrayCopy(currentProgram.pixels, canvas.pixels);
+    canvas.updatePixels();
     break;
   case "heightMap":
     currentProgram = heightMap;
     quadHeight.set("u", fluidTex);
     quadHeight.set("threshold", 2.);
     //quadHeight.set("u_flip", true);
-    drawQuad(currentProgram);
+    drawQuad(currentProgram, quadHeight);
+    arrayCopy(currentProgram.pixels, canvas.pixels);
+    canvas.updatePixels();
     break;
   }
 
   int endTime = millis();
   estimatedFrameTime = (endTime-startTime) / 1000.;
-  //println(estimatedFrameTime);
-  //noLoop();
-  image(currentProgram, 0, 0);
+  
   if (keyPressed) {
     if (key == 'b' || key == 'B') {
       dewetMode = !dewetMode;
       println(dewetMode);
     }
   }
+  
+  image(canvas, 0, 0, width, height);
+  //noLoop();
+  println(frameRate);
 }
 
-void drawQuad(PGraphics pg) {
+void drawQuad(PGraphics pg, PShader s) {
   //println(pg);
   pg.beginDraw();
   pg.noStroke();
+  pg.shader(s);
   pg.beginShape(TRIANGLES);
-  pg.vertex(-s, -s, 0, 0);
-  pg.vertex(s, s, 1, 1);
-  pg.vertex(s, -s, 1, 0);
-  pg.vertex(-s, -s, 0, 0);
-  pg.vertex(-s, s, 0, 1);
-  pg.vertex(s, s, 1, 1);
+  pg.vertex(0, 0, 0, 0);
+  pg.vertex(pg.width, pg.width, 1, 1);
+  pg.vertex(pg.width, 0, 1, 0);
+  pg.vertex(0, 0, 0, 0);
+  pg.vertex(0, pg.width, 0, 1);
+  pg.vertex(pg.width, pg.width, 1, 1);
   pg.endShape();
   //pg.save(pg+"img.png");
+  pg.loadPixels();
   pg.endDraw();
-  image(pg, 0, 0);
+  //image(pg, 0, 0);
 }
