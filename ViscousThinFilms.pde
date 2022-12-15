@@ -45,7 +45,6 @@ PImage[] causticTextures = {caustics1, caustics2, caustics3, caustics4};
 
 String mode; //Mode d'affichage
 boolean dewetMode; //Appliquer du liquide/faire des trous
-float s = 1;
 
 int w = 512;
 int h = 512;
@@ -57,7 +56,7 @@ PImage empty;
 
 float angle = 0;
 float steepness = 1;
-float G = 30;
+float G = 10.;
 float diffusion = 2;
 int mobility = 0;
 
@@ -73,11 +72,11 @@ void settings() {
 }
 
 void setup() {
-  mode = "gradient";
+  mode = "refraction";
   dewetMode = false;
-
-  back = new Background("brick", "bricks.diffuse.jpg", "bricks.bump.jpg", 2); //Chargement du fond
-  fluid = new Fluid("wine", 1.33, color(.4, 0., .05), 0., 1., 5);
+  frameRate(144);
+  back = new Background("brick", "bricks.diffuse.jpg", "bricks.bump.jpg", 4); //Chargement du fond
+  fluid = new Fluid("wine", 1.33, color(.2, 0., .1), 0., 1., 5);
 
   simWidth = simRes;
   simHeight = simRes * (height/width);
@@ -222,11 +221,14 @@ void draw() {
   }
   
   if (mousePressed) {
+    
+    float mX = mouseX/ (float) width;
+    float mY = mouseY/ (float) height;
     //println("test");
     currentProgram = dewetMode ? dewet : spray;
     for (PShader s : dewetSpray) {
-      s.set("v_click", (float) mouseX, (float) mouseY);
-      s.set("radius", 0.5);
+      s.set("v_click", mX, mY);
+      s.set("radius", 0.05);
       s.set("heightToWidthRatio", height/ (float) width);
       s.set("u", work1);
     }
@@ -272,6 +274,7 @@ void draw() {
     quadRefract.set("fluidColor", red(fluid.col), green(fluid.col), blue(fluid.col));
     quadRefract.set("fluidClarity", fluid.clearDepth, fluid.opaqueDepth);
     quadRefract.set("u", fluidTex);
+    //quadRefract.set("u_flip", true);
     quadRefract.set("normals", normals);
     quadRefract.set("caustics1", caustics1);
     quadRefract.set("caustics2", caustics2);
