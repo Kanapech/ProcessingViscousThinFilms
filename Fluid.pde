@@ -1,15 +1,19 @@
 class Fluid{
   String title;
   float refractiveIndex;
-  color col;
+  float red;
+  float blue;
+  float green;
   float clearDepth;
   float opaqueDepth;
   float viscosity;
   
-  Fluid(String t, float ref, color c, float clearD, float opaqueD, float visc){
+  Fluid(String t, float ref, float r, float g, float b, float clearD, float opaqueD, float visc){
     title = t;
     refractiveIndex = ref;
-    col = c;
+    red = r;
+    green = g;
+    blue = b;
     clearDepth = clearD;
     opaqueDepth = opaqueD;
     viscosity = visc;

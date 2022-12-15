@@ -15,5 +15,5 @@ vec3 getNormal(vec2 p)
 void main()
 {
   vec2 h = vec2(1.,1.) / vec2(textureSize(u, 0));
-  fragColor.rgb = getNormal(p);
+  fragColor = vec4(getNormal(p), 1);
 }
