@@ -10,7 +10,6 @@ PShader quadDewet;
 PShader quadRefract;
 PShader quadCaustics;
 PShader quadBlack;
-ArrayList<PShader> dewetSpray;
 
 //Definition des programmes (equivalent OpenGL)
 PGraphics currentProgram;
@@ -44,7 +43,7 @@ PImage normalsWork;
 String mode; //Mode d'affichage
 boolean dewetMode; //Appliquer du liquide/faire des trous
 
-int simRes = 256;
+int simRes = 512;
 int simWidth;
 int simHeight;
 
@@ -70,7 +69,6 @@ void settings() {
 
 void setup() {
   mode = "refraction";
-  dewetMode = false;
   back = new Background("brick", "bricks.diffuse.jpg", "bricks.bump.jpg", 2); //Chargement du fond
   fluid = new Fluid("wine", 1.33, .4, 0., .05, 0., 1., 5);
   fluid = new Fluid("wine", 1.33, 0., 0., 0., 0., 1., 5);
@@ -78,8 +76,8 @@ void setup() {
   simWidth = simRes;
   simHeight = (int)(simRes * (height/ (float) width));
   //u0 = loadImage("emptiest.png");
-  //u0 = loadImage("siggraph.png");
-  u0 = loadImage("doodle520.png");
+  u0 = loadImage("siggraph.png");
+  //u0 = loadImage("doodle520.png");
   viridis = loadImage("viridis.png");
   empty = loadImage("empty.png"); //Image en cas de composante diffuse ou bump nulle
 
@@ -136,13 +134,7 @@ void setup() {
   quadRefract = loadShader("shaders/refraction.frag", "shaders/quad.vert");
   quadCaustics = loadShader("shaders/caustics.frag", "shaders/quad.vert");
   quadBlack = loadShader("shaders/black.frag", "shaders/quad.vert");
-
-  dewetSpray = new ArrayList<PShader>() {
-    {
-      add(quadDewet);
-      add(quadSpray);
-    }
-  };
+  
 }
 
 
@@ -344,6 +336,7 @@ void drawQuad(PGraphics pg, PShader s) {
   //println(pg);
   pg.beginDraw();
   pg.noStroke();
+  s.set("u_size", simRes);
   pg.shader(s);
   pg.beginShape(TRIANGLES);
   pg.vertex(0, 0, 0, 0);
@@ -361,7 +354,6 @@ void drawQuad(PGraphics pg, PShader s) {
 
 void keyPressed() {
   if (key == 'b' || key == 'B') {
-    dewetMode = !dewetMode;
-    println(dewetMode);
+
   }
 }

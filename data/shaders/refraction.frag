@@ -76,9 +76,9 @@ void main()
   vec3 groundColor = texture(groundTexture, groundPoint).rgb;
   float height = (U(0, 0));// + u(0, -1) + u(0, 1) + u(-1, 0) + u(1, 0)) / 5.;
   float depth = max(0., min((height - fluidClarity.x) / (fluidClarity.y - fluidClarity.x), 1.));
-  fragColor.rgb = ((1. - depth) * groundColor + depth * fluidColor) + illumination * fluidColor;
-  fragColor.a = 1.;
+  fragColor = vec4(((1. - depth) * groundColor + depth * fluidColor) + illumination * fluidColor, 1.);
+
   if (U(0, 0) == 0.) {
-      fragColor.rgb = vec3(0., 0., 0.);
+      fragColor = vec4(0., 0., 0., 1.);
   }
 }

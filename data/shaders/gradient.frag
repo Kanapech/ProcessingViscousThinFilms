@@ -7,5 +7,5 @@ out vec4 fragColor;
 
 void main()
 {
-    fragColor = texture(gradient, vec2(texture(u, p).r, 0.));
+    fragColor = texture(gradient, vec2(texture(u, p).r, 1.));
 }

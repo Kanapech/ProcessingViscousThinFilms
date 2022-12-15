@@ -45,5 +45,5 @@ void main()
         // Neumann b.c. - zero out edge pixels, mobility will prevent flow to them.
         up = 0.;
     }
-    fragColor = vec4(up, up, up, 1);
+    fragColor = vec4(up, up, up, 1.);
 }
