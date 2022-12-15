@@ -46,8 +46,6 @@ PImage[] causticTextures = {caustics1, caustics2, caustics3, caustics4};
 String mode; //Mode d'affichage
 boolean dewetMode; //Appliquer du liquide/faire des trous
 
-int w = 512;
-int h = 512;
 int simRes = 256;
 int simWidth;
 int simHeight;
@@ -60,30 +58,29 @@ float G = 10.;
 float diffusion = 2;
 int mobility = 0;
 
-int iterations = 1;
-boolean dynamicTimeStep = false;
+int iterations = 3;
+boolean dynamicTimeStep = true;
 float estimatedFrameTime = 0.02;
 float[] logTimeStep = {-5, -1};
-float tau = dynamicTimeStep ? min(10 * (estimatedFrameTime / iterations), pow(10, logTimeStep[1])) : pow(10, logTimeStep[1]);
+float tau;
 boolean periodic = false;
 
 void settings() {
-  size(w, h, P2D);
+  size(512, 512, P2D);
 }
 
 void setup() {
   mode = "refraction";
   dewetMode = false;
-  frameRate(144);
-  back = new Background("brick", "bricks.diffuse.jpg", "bricks.bump.jpg", 4); //Chargement du fond
+  back = new Background("brick", "bricks.diffuse.jpg", "bricks.bump.jpg", 2); //Chargement du fond
   fluid = new Fluid("wine", 1.33, color(.2, 0., .1), 0., 1., 5);
 
   simWidth = simRes;
-  simHeight = simRes * (height/width);
-
+  simHeight = (int)(simRes * (height/ (float) width));
+  println(simWidth, simHeight);
   //u0 = loadImage("emptiest.png");
-  u0 = loadImage("siggraph.png");
-  //u0 = loadImage("doodle520.png");
+  //u0 = loadImage("siggraph.png");
+  u0 = loadImage("doodle520.png");
   viridis = loadImage("viridis.png");
   empty = loadImage("empty.png"); //Image en cas de composante diffuse ou bump nulle
 
@@ -111,7 +108,7 @@ void setup() {
   caustics4 = createImage(simWidth, simHeight, RGB);
   normals = createImage(simWidth, simHeight, RGB);
   normalsWork = createImage(simWidth, simHeight, RGB);
-  
+
   work1.loadPixels();
   work2.loadPixels();
   fluidTex.loadPixels();
@@ -141,10 +138,10 @@ void setup() {
 
 
 void draw() {
-  background(0);
+  clear();
   if (frameCount == 1) {
     currentProgram = pass;
-    
+
     quadPass.set("u", u0);
     quadPass.set("u_flip", false);
     drawQuad(currentProgram, quadPass);
@@ -159,6 +156,7 @@ void draw() {
   quadThin.set("angle", angle);
   quadThin.set("tilt", steepness);
   quadThin.set("eta", diffusion);
+  tau = dynamicTimeStep ? min(10 * (estimatedFrameTime / iterations), pow(10, logTimeStep[1])) : pow(10, logTimeStep[1]);
   quadThin.set("tau", tau);
   quadThin.set("epsilon", fluid.viscosity);
   quadThin.set("bumpDepth", back.bumpDepth);
@@ -219,9 +217,9 @@ void draw() {
     arrayCopy(currentProgram.pixels, work1.pixels);
     work1.updatePixels();
   }
-  
+
   if (mousePressed) {
-    
+
     float mX = mouseX/ (float) width;
     float mY = mouseY/ (float) height;
     //println("test");
@@ -266,7 +264,7 @@ void draw() {
   drawQuad(currentProgram, quadNormal);
   arrayCopy(currentProgram.pixels, normals.pixels);
   normals.updatePixels();
-  
+
   switch(mode) {
   case "refraction":
     currentProgram = refract;
@@ -316,14 +314,6 @@ void draw() {
 
   int endTime = millis();
   estimatedFrameTime = (endTime-startTime) / 1000.;
-  
-  if (keyPressed) {
-    if (key == 'b' || key == 'B') {
-      dewetMode = !dewetMode;
-      println(dewetMode);
-    }
-  }
-  
   image(canvas, 0, 0, width, height);
   //noLoop();
   println(frameRate);
@@ -346,4 +336,11 @@ void drawQuad(PGraphics pg, PShader s) {
   pg.loadPixels();
   pg.endDraw();
   //image(pg, 0, 0);
+}
+
+void keyPressed() {
+  if (key == 'b' || key == 'B') {
+    dewetMode = !dewetMode;
+    println(dewetMode);
+  }
 }
