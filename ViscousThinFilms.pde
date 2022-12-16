@@ -29,7 +29,9 @@ PGraphics black;
 Background back;
 Fluid fluid;
 PImage u0; //Conditions initiales;
-PImage viridis;
+PImage viridis; //couleur pour le gradient
+
+//Framebuffers
 PImage work1;
 PImage work2;
 PImage fluidTex;
@@ -43,12 +45,14 @@ PImage normalsWork;
 int mode; //Mode d'affichage
 boolean dewetMode; //Appliquer du liquide/faire des trous
 
+//Résolution de la simulation
 int simRes = 512;
 int simWidth;
 int simHeight;
 
 PImage empty;
 
+//Paramètres pour la simulation
 float angle = 0;
 float steepness = 1;
 float G = 10;
@@ -70,11 +74,12 @@ void settings() {
 void setup() {
   mode = 0;
   back = new Background("brick", "bricks.diffuse.jpg", "bricks.bump.jpg", 2); //Chargement du fond
-  fluid = new Fluid("wine", 1.33, .4, 0., .05, 0., 1., 5);
+  //fluid = new Fluid("wine", 1.33, .4, 0., .05, 0., 1., 5);
   fluid = new Fluid("wine", 1.33, 0., 0., 0., 0., 1., 5);
 
   simWidth = simRes;
   simHeight = (int)(simRes * (height/ (float) width));
+  
   //u0 = loadImage("emptiest.png");
   u0 = loadImage("siggraph.png");
   //u0 = loadImage("doodle520.png");
@@ -96,6 +101,7 @@ void setup() {
   caustics = createGraphics(simWidth, simHeight, P2D);
   black = createGraphics(simWidth, simHeight, P2D);
 
+  //Framebuffers
   work1 = createImage(simWidth, simHeight, ARGB);
   work2 = createImage(simWidth, simHeight, ARGB);
   fluidTex = createImage(simWidth, simHeight, ARGB);
@@ -114,6 +120,7 @@ void setup() {
 
   PImage[] causticTextures = {caustics1, caustics2, caustics3, caustics4};
 
+  //On mets les caustics en noir car elles ne sont pas calculées mais sont utilisées pour la refraction
   for (PImage img : causticTextures) {
     img.loadPixels();
     for (int i = 0; i < img.pixels.length; i++) {
@@ -219,7 +226,7 @@ void draw() {
     work1.updatePixels();
   }
 
-  if (mousePressed) {
+  if (mousePressed) {  //Pour ajouter du liquide ou ajouter des trous avec la souris
 
     float mX = mouseX/ (float) width;
     float mY = mouseY/ (float) height;
@@ -278,7 +285,7 @@ void draw() {
   arrayCopy(currentProgram.pixels, normals.pixels);
   normals.updatePixels();
 
-  switch(mode) {
+  switch(mode) { //Modes pour l'affichage'
   case 0:
     currentProgram = refract;
     quadRefract.set("fluidRefractiveIndex", fluid.refractiveIndex);
@@ -332,7 +339,7 @@ void draw() {
   //println(frameRate);
 }
 
-void drawQuad(PGraphics pg, PShader s) {
+void drawQuad(PGraphics pg, PShader s) { //Définition des points pour le vertex shader
   //println(pg);
   pg.beginDraw();
   pg.noStroke();
@@ -352,7 +359,7 @@ void drawQuad(PGraphics pg, PShader s) {
   //image(pg, 0, 0);
 }
 
-void keyPressed() {
+void keyPressed() { //Changement de mode avec le clavier
   if (key == 'a' || key == 'A') {
     mode--;
     mode = constrain(mode, 0, 3);
