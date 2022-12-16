@@ -40,7 +40,7 @@ PImage caustics4;
 PImage normals;
 PImage normalsWork;
 
-String mode; //Mode d'affichage
+int mode; //Mode d'affichage
 boolean dewetMode; //Appliquer du liquide/faire des trous
 
 int simRes = 512;
@@ -68,7 +68,7 @@ void settings() {
 }
 
 void setup() {
-  mode = "refraction";
+  mode = 0;
   back = new Background("brick", "bricks.diffuse.jpg", "bricks.bump.jpg", 2); //Chargement du fond
   fluid = new Fluid("wine", 1.33, .4, 0., .05, 0., 1., 5);
   fluid = new Fluid("wine", 1.33, 0., 0., 0., 0., 1., 5);
@@ -279,7 +279,7 @@ void draw() {
   normals.updatePixels();
 
   switch(mode) {
-  case "refraction":
+  case 0:
     currentProgram = refract;
     quadRefract.set("fluidRefractiveIndex", fluid.refractiveIndex);
     quadRefract.set("fluidColor", fluid.red, fluid.green, fluid.blue);
@@ -296,7 +296,7 @@ void draw() {
     arrayCopy(currentProgram.pixels, canvas.pixels);
     canvas.updatePixels();
     break;
-  case "gradient":
+  case 1:
     currentProgram = gradient;
     quadGradient.set("gradient", viridis);
     quadGradient.set("u", fluidTex);
@@ -306,7 +306,7 @@ void draw() {
     canvas.updatePixels();
     //canvas.save("canvas.png");
     break;
-  case "normal":
+  case 2:
     currentProgram = normal;
     quadNormal.set("u", normals);
     //quadNormal.set("u_flip", true);
@@ -314,7 +314,7 @@ void draw() {
     arrayCopy(currentProgram.pixels, canvas.pixels);
     canvas.updatePixels();
     break;
-  case "heightMap":
+  case 3:
     currentProgram = heightMap;
     quadHeight.set("u", fluidTex);
     quadHeight.set("threshold", 2.);
@@ -353,7 +353,12 @@ void drawQuad(PGraphics pg, PShader s) {
 }
 
 void keyPressed() {
-  if (key == 'b' || key == 'B') {
-
+  if (key == 'a' || key == 'A') {
+    mode--;
+    mode = constrain(mode, 0, 3);
+  }
+  if (key == 'e' || key == 'E') {
+    mode++;
+    mode = constrain(mode, 0, 3);
   }
 }
